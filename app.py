@@ -9,7 +9,7 @@ import uuid
 
 # instance APP
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*", "methods": ["GET", "POST", "PUT", "DELETE"]}})
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'gamehive.sqlite')
@@ -112,35 +112,35 @@ def login():
 
 
 # Game endpoints
-@app.route('/games', methods=["POST"])
+@app.route('/games', methods=['POST'])
 def add_game():
-    game_data = request.get_json()
-    title = game_data.get('title')
-    description = game_data.get('description')
-    price = game_data.get('price')
-    image = game_data.get('image')
-    category = game_data.get('category')
-    contact_email = game_data.get('contactEmail')
-    contact_phone = game_data.get('contactPhone')
-    is_new = game_data.get('isNew', True)
-    user_id = game_data.get('user_id')
+    data = request.json
     
+    # Verificar que todos los campos requeridos estén presentes
+    required_fields = ['title', 'description', 'price', 'category', 'image', 'contact_email']
+    for field in required_fields:
+        if field not in data:
+            return jsonify({'error': f'Missing required field: {field}'}), 400
+    
+    # Crear un nuevo juego
     new_game = Game(
-        title=title,
-        description=description,
-        price=price,
-        category=category,
-        image=image,
-        contact_email=contact_email,
-        contact_phone=contact_phone,
-        is_new=is_new,
-        user_id=user_id
+        title=data['title'],
+        description=data['description'],
+        price=float(data['price']),
+        category=data['category'],
+        image=data['image'],
+        contact_email=data['contact_email'],
+        contact_phone=data.get('contact_phone', ''),
+        is_new=data.get('is_new', True),
+        user_id=data.get('user_id', '1')
     )
     
+    # Guardar en la base de datos
     db.session.add(new_game)
     db.session.commit()
-
-    return jsonify(game_schema.dump(new_game))
+    
+    # Devolver el juego creado
+    return game_schema.jsonify(new_game), 201
 
 
 @app.route("/games", methods=["GET"])
@@ -226,4 +226,4 @@ def create_tables():
 
 if __name__ == "__main__":
     create_tables()  # Call the function directly
-    app.run(debug=True, port=8000)
+    app.run(host='0.0.0.0', debug=True, port=8000)
