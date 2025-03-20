@@ -7,7 +7,7 @@ from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
 
-# instance APP
+
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*", "methods": ["GET", "POST", "PUT", "DELETE"]}})
 
@@ -78,7 +78,7 @@ game_schema = GameSchema()
 games_schema = GameSchema(many=True)
 
 
-# User endpoints
+
 @app.route('/users', methods=["POST"])
 def register_user():
     user_data = request.get_json()
@@ -111,7 +111,7 @@ def login():
     return jsonify({"error": "Invalid credentials"}), 401
 
 
-# Game endpoints
+
 @app.route('/games', methods=['POST'])
 def add_game():
     data = request.json
@@ -122,7 +122,7 @@ def add_game():
         if field not in data:
             return jsonify({'error': f'Missing required field: {field}'}), 400
     
-    # Crear un nuevo juego
+
     new_game = Game(
         title=data['title'],
         description=data['description'],
@@ -135,11 +135,11 @@ def add_game():
         user_id=data.get('user_id', '1')
     )
     
-    # Guardar en la base de datos
+
     db.session.add(new_game)
     db.session.commit()
     
-    # Devolver el juego creado
+
     return game_schema.jsonify(new_game), 201
 
 
@@ -206,13 +206,13 @@ def get_user_games(user_id):
     return jsonify(games_schema.dump(user_games))
 
 
-# Health Checker
+
 @app.route("/healthchecker", methods=["GET"])
 def healthchecker():
     return {"status": "success", "message": "GameHive API is running"}
 
 
-# Create tables
+
 def create_tables():
     with app.app_context():  # Set up the application context
         db.create_all()
